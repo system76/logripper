@@ -2,6 +2,17 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
+config :logripper,
+  ecto_repos: [Logripper.Repo]
+
+config :logripper, Logripper.Repo,
+  adapter: Ecto.Adapters.MySQL,
+  database: "logripper",
+  username: "logripper",
+  password: "logripper",
+  hostname: "localhost"
+
+
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
 # file won't be loaded nor affect the parent project. For this reason,
