@@ -14,7 +14,7 @@ defmodule Logripper.Mixfile do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:ex_aws, :hackney, :logger, :sweet_xml],
       mod: {Logripper.Application, []}
     ]
   end
@@ -23,7 +23,10 @@ defmodule Logripper.Mixfile do
   defp deps do
     [
       {:ecto, "~> 2.0"},
+      {:ex_aws, "~> 1.1"},
+      {:hackney, "~> 1.9"},
       {:mariaex, "~> 0.8.2"},
+      {:sweet_xml, "~> 0.6.5"},
     ]
   end
 end
