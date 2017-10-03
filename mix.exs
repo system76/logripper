@@ -22,6 +22,7 @@ defmodule Logripper.Mixfile do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:csv, "~> 2.0.0"},
       {:ecto, "~> 2.0"},
       {:ex_aws, "~> 1.1"},
       {:hackney, "~> 1.9"},

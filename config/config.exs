@@ -14,3 +14,6 @@ config :logripper, Logripper.Repo,
 
 config :ex_aws,
   region: "us-west-2"
+
+config :logger,
+  level: :info
