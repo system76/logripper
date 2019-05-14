@@ -61,10 +61,10 @@ defmodule Mix.Tasks.Logripper.UpdateCache do
 
     log_objects = Enum.map(log_entries, &parse_log_entry/1)
 
-    Repo.transaction fn ->
-      Enum.each(log_objects, &Repo.insert!/1)
-      Repo.insert_all("cloudfront_log_files", [%{filename: key}])
-    end
+    Repo.transaction(fn ->
+      Enum.each(log_objects, &Repo.insert!(&1, timeout: :infinity))
+      Repo.insert_all("cloudfront_log_files", [%{filename: key}], timeout: :infinity)
+    end, timeout: :infinity)
   end
 
   defp parse_log_entry({:ok, [
@@ -93,20 +93,106 @@ defmodule Mix.Tasks.Logripper.UpdateCache do
     x_edge_response_result_type,
     cs_protocol_version,
   ]}) do
+    parse_log_entry({:ok, [
+      date,
+      time,
+      x_edge_location,
+      sc_bytes,
+      c_ip,
+      cs_method,
+      cs_host,
+      cs_uri_stem,
+      sc_status,
+      cs_referer,
+      cs_user_agent,
+      cs_uri_query,
+      cs_cookie,
+      x_edge_result_type,
+      x_edge_request_id,
+      x_host_header,
+      cs_protocol,
+      cs_bytes,
+      time_taken,
+      x_forwarded_for,
+      ssl_protocol,
+      ssl_cipher,
+      x_edge_response_result_type,
+      cs_protocol_version,
+      "-",
+      "-"
+    ]})
+  end
+
+  defp parse_log_entry({:ok, [
+    date,
+    time,
+    x_edge_location,
+    sc_bytes,
+    c_ip,
+    cs_method,
+    cs_host,
+    cs_uri_stem,
+    sc_status,
+    cs_referer,
+    cs_user_agent,
+    cs_uri_query,
+    cs_cookie,
+    x_edge_result_type,
+    x_edge_request_id,
+    x_host_header,
+    cs_protocol,
+    cs_bytes,
+    time_taken,
+    x_forwarded_for,
+    ssl_protocol,
+    ssl_cipher,
+    x_edge_response_result_type,
+    cs_protocol_version,
+    _fle_status,
+    _fle_encrypted_fields
+  ]}) do
     {:ok, timestamp} = NaiveDateTime.new(
       Date.from_iso8601!(date),
       Time.from_iso8601!(time)
     )
 
+    sc_bytes =
+      try do
+        String.to_integer(sc_bytes)
+      rescue ArgumentError ->
+        nil
+      end
+
+    sc_status =
+      try do
+        String.to_integer(sc_status)
+      rescue ArgumentError ->
+        nil
+      end
+
+    cs_bytes =
+      try do
+        String.to_integer(cs_bytes)
+      rescue ArgumentError ->
+        nil
+      end
+
+    time_taken =
+      try do
+        String.to_float(time_taken)
+      rescue ArgumentError ->
+        nil
+      end
+
     %CloudfrontLog{
       timestamp: timestamp,
       edge_location: x_edge_location,
-      bytes: String.to_integer(sc_bytes),
+      bytes: sc_bytes,
       client_ip: c_ip,
       method: cs_method,
       host: cs_host,
       path: cs_uri_stem,
-      status: String.to_integer(sc_status),
+      status: sc_status,
       referer: cs_referer,
       user_agent: cs_user_agent,
       query_string: cs_uri_query,
@@ -116,8 +202,8 @@ defmodule Mix.Tasks.Logripper.UpdateCache do
       request_id: x_edge_request_id,
       host_header: x_host_header,
       https: cs_protocol == "https",
-      request_bytes: String.to_integer(cs_bytes),
-      time_taken: String.to_float(time_taken),
+      request_bytes: cs_bytes,
+      time_taken: time_taken,
       forwarded_for: x_forwarded_for,
       ssl_protocol: ssl_protocol,
       ssl_cipher: ssl_cipher,
